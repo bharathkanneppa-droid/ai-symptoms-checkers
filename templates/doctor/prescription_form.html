@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}New Prescription{% endblock %}
+{% block page_title %}New Prescription{% endblock %}
+{% block content %}
+
+<div class="card">
+    <div class="card-header"><strong><i class="bi bi-file-earmark-plus"></i> Write Prescription</strong></div>
+    <div class="card-body">
+        <form method="post" action="{{ url_for('doctor.new_prescription') }}" id="rxForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Patient *</label>
+                    <select name="patient_id" class="form-select" required>
+                        <option value="">Select patient...</option>
+                        {% for p in patients %}
+                        <option value="{{ p.id }}" {{ 'selected' if patient_id == p.id }}>
+                            {{ p.full_name }} ({{ p.user.email }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Diagnosis *</label>
+                    <input type="text" name="diagnosis" class="form-control" placeholder="e.g. Common Cold" required>
+                </div>
+            </div>
+
+            <label class="form-label mb-2"><strong>Medicines</strong></label>
+            <div id="rxItems">
+                <div class="row g-2 mb-2 rx-item">
+                    <div class="col-md-3"><input type="text" name="medicine_name" class="form-control" placeholder="Medicine name"></div>
+                    <div class="col-md-2"><input type="text" name="dosage" class="form-control" placeholder="Dosage"></div>
+                    <div class="col-md-2"><input type="text" name="frequency" class="form-control" placeholder="Frequency"></div>
+                    <div class="col-md-2"><input type="text" name="duration" class="form-control" placeholder="Duration"></div>
+                    <div class="col-md-2"><input type="text" name="instructions" class="form-control" placeholder="Instructions"></div>
+                    <div class="col-md-1"><button type="button" class="btn btn-outline-danger remove-rx"><i class="bi bi-trash"></i></button></div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-primary mb-4" id="addRxItem">
+                <i class="bi bi-plus-lg"></i> Add medicine
+            </button>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-8">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-control" rows="2"
+                              placeholder="Advice, precautions, rest, diet..."></textarea>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Follow up (days)</label>
+                    <input type="number" name="follow_up_in_days" class="form-control" min="1" placeholder="e.g. 7">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save Prescription</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('addRxItem').addEventListener('click', function () {
+        const container = document.getElementById('rxItems');
+        const first = container.querySelector('.rx-item');
+        const clone = first.cloneNode(true);
+        clone.querySelectorAll('input').forEach(function (i) { i.value = ''; });
+        container.appendChild(clone);
+    });
+
+    document.getElementById('rxItems').addEventListener('click', function (e) {
+        if (e.target.closest('.remove-rx')) {
+            const items = document.querySelectorAll('.rx-item');
+            if (items.length > 1) e.target.closest('.rx-item').remove();
+        }
+    });
+</script>
+{% endblock %}

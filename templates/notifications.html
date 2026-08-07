@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-end mb-3">
+    <form method="post" action="{{ url_for('notifications.mark_all_read') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-sm btn-outline-primary"><i class="bi bi-check2-all"></i> Mark all read</button>
+    </form>
+</div>
+
+{% if items %}
+<div class="card">
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% for item in items %}
+            <div class="list-group-item d-flex align-items-start gap-3 {{ 'bg-light' if not item.is_read }}">
+                <i class="bi {{ {'appointment':'bi-calendar-check','prescription':'bi-file-earmark-medical','info':'bi-info-circle'}.get(item.type,'bi-bell') }} fs-4 text-primary"></i>
+                <div class="flex-grow-1">
+                    <strong>{{ item.title }}</strong>
+                    <div class="text-muted small">{{ item.message }}</div>
+                    <small class="text-muted">{{ item.created_at.strftime('%d %b %Y, %H:%M') }}</small>
+                </div>
+                {% if not item.is_read %}
+                <form method="post" action="{{ url_for('notifications.mark_read', notification_id=item.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-sm btn-outline-secondary">Mark read</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="card"><div class="card-body text-center py-5 text-muted">
+    <i class="bi bi-bell-slash fs-1"></i>
+    <p class="mt-2">No notifications.</p>
+</div></div>
+{% endif %}
+{% endblock %}

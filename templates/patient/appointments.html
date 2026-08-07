@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}My Appointments{% endblock %}
+{% block page_title %}My Appointments{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <button class="btn btn-sm btn-outline-primary {{ 'active' if not active }}" onclick="location.href='{{ url_for('appointments.my_appointments') }}'">All</button>
+        <button class="btn btn-sm btn-outline-primary {{ 'active' if active == 'pending' }}" onclick="location.href='{{ url_for('appointments.my_appointments', status='pending') }}'">Pending</button>
+        <button class="btn btn-sm btn-outline-primary {{ 'active' if active == 'accepted' }}" onclick="location.href='{{ url_for('appointments.my_appointments', status='accepted') }}'">Accepted</button>
+        <button class="btn btn-sm btn-outline-primary {{ 'active' if active == 'completed' }}" onclick="location.href='{{ url_for('appointments.my_appointments', status='completed') }}'">Completed</button>
+    </div>
+    <a href="{{ url_for('appointments.book') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus"></i> New</a>
+</div>
+
+{% if appointments %}
+<div class="table-responsive card">
+    <table class="table table-hover align-middle mb-0">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Doctor</th>
+                <th>Department</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appt in appointments %}
+            <tr>
+                <td>{{ appt.id }}</td>
+                <td>{{ appt.doctor.full_name }}<div class="text-muted small">{{ appt.doctor.specialization }}</div></td>
+                <td>{{ appt.department.name if appt.department else '-' }}</td>
+                <td>{{ appt.appointment_date.strftime('%d %b %Y') }}</td>
+                <td>{{ appt.appointment_time }}</td>
+                <td><span class="badge text-bg-{{ appt.badge_class }}">{{ appt.status|upper }}</span></td>
+                <td>
+                    {% if appt.status in ['pending', 'accepted'] %}
+                    <form method="post" action="{{ url_for('appointments.cancel', appointment_id=appt.id) }}"
+                          onsubmit="return confirm('Cancel this appointment?')" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle"></i></button>
+                    </form>
+                    {% endif %}
+                    {% if appt.prescription %}
+                    <a href="{{ url_for('prescriptions.detail', prescription_id=appt.prescription.id) }}" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-file-earmark-medical"></i>
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5 text-muted">
+        <i class="bi bi-calendar-x fs-1"></i>
+        <p class="mt-2">No appointments found.</p>
+        <a href="{{ url_for('appointments.book') }}" class="btn btn-primary">Book one now</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

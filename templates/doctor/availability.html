@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Availability{% endblock %}
+{% block page_title %}Manage Availability{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><strong><i class="bi bi-toggle-on"></i> Overall Status</strong></div>
+            <div class="card-body">
+                <p class="text-muted">Quick switch to show or hide yourself from patient booking.</p>
+                <form method="post" action="{{ url_for('doctor.availability') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="toggle_global" value="1">
+                    <div class="form-check form-switch form-switch-lg">
+                        <input class="form-check-input" type="checkbox" {{ 'checked' if doctor.is_available }}
+                               onchange="this.form.submit()" id="globalToggle">
+                        <label class="form-check-label" for="globalToggle">
+                            {{ 'Accepting appointments' if doctor.is_available else 'Currently unavailable' }}
+                        </label>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="card mt-4">
+            <div class="card-header"><strong><i class="bi bi-info-circle"></i> Default Hours</strong></div>
+            <div class="card-body small text-muted">
+                Days without a configured window default to <strong>09:00 - 17:00</strong>.
+                Uncheck a day to mark it off. Time slots are generated hourly.
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header"><strong><i class="bi bi-calendar-week"></i> Weekly Schedule</strong></div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('doctor.availability') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    {% for value, name in weekdays %}
+                    {% set entry = schedule.get(value|int) %}
+                    {% set is_on = entry.is_available if entry else true %}
+                    <div class="row g-2 align-items-center mb-2">
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input day-check" type="checkbox"
+                                       name="days" value="{{ value }}" {{ 'checked' if is_on }}
+                                       id="day{{ value }}">
+                                <label class="form-check-label" for="day{{ value }}">{{ name }}</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="time" name="start_time" class="form-control form-control-sm"
+                                   value="{{ entry.start_time if entry else '09:00' }}">
+                        </div>
+                        <div class="col-md-1 text-center text-muted">to</div>
+                        <div class="col-md-4">
+                            <input type="time" name="end_time" class="form-control form-control-sm"
+                                   value="{{ entry.end_time if entry else '17:00' }}">
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary mt-3"><i class="bi bi-check-lg"></i> Save Schedule</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

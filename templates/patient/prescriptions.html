@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}My Prescriptions{% endblock %}
+{% block page_title %}My Prescriptions{% endblock %}
+{% block content %}
+
+{% if prescriptions %}
+<div class="table-responsive card">
+    <table class="table table-hover align-middle mb-0">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Diagnosis</th>
+                <th>Doctor</th>
+                <th>Items</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for rx in prescriptions %}
+            <tr>
+                <td>RX-{{ '%05d' % rx.id }}</td>
+                <td><strong>{{ rx.diagnosis }}</strong></td>
+                <td>{{ rx.doctor.full_name if rx.doctor else 'Doctor' }}</td>
+                <td>{{ rx.item_count }}</td>
+                <td>{{ rx.created_at.strftime('%d %b %Y') }}</td>
+                <td>
+                    <a href="{{ url_for('prescriptions.detail', prescription_id=rx.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-eye"></i> View
+                    </a>
+                    <a href="{{ url_for('prescriptions.download', prescription_id=rx.id) }}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-download"></i> PDF
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center py-5 text-muted">
+        <i class="bi bi-file-earmark-medical fs-1"></i>
+        <p class="mt-2">No prescriptions yet.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block title %}Book Appointment{% endblock %}
+{% block page_title %}Book Appointment{% endblock %}
+{% block content %}
+
+<div class="card">
+    <div class="card-header">
+        <strong><i class="bi bi-calendar-plus"></i> Book a New Appointment</strong>
+    </div>
+    <div class="card-body">
+        <!-- Stepper -->
+        <ol class="stepper mb-4">
+            <li class="active" data-step="1">Department</li>
+            <li data-step="2">Doctor</li>
+            <li data-step="3">Date &amp; Time</li>
+            <li data-step="4">Confirm</li>
+        </ol>
+
+        <form method="post" action="{{ url_for('appointments.book') }}" id="bookForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="department_id" id="departmentId">
+            <input type="hidden" name="doctor_id" id="doctorId">
+            <input type="hidden" name="appointment_date" id="appointmentDate">
+            <input type="hidden" name="appointment_time" id="appointmentTime">
+
+            <!-- Step 1: Department -->
+            <div class="step-panel" id="step1">
+                <h6 class="mb-3">Choose a department</h6>
+                <div class="row g-3">
+                    {% for dept in departments %}
+                    <div class="col-md-4">
+                        <button type="button" class="dept-card card h-100 w-100 text-start"
+                                data-dept-id="{{ dept.id }}" data-dept-name="{{ dept.name }}">
+                            <div class="card-body">
+                                <div class="feature-icon"><i class="bi {{ dept.icon or 'bi-activity' }}"></i></div>
+                                <strong>{{ dept.name }}</strong>
+                                <div class="text-muted small mt-1">{{ dept.description or '' }}</div>
+                            </div>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Step 2: Doctor -->
+            <div class="step-panel d-none" id="step2">
+                <h6 class="mb-3">Choose a doctor <span class="text-muted small" id="deptLabel"></span></h6>
+                <div class="row g-3" id="doctorList">
+                    <div class="col-12 text-center py-4 text-muted">Please select a department first.</div>
+                </div>
+            </div>
+
+            <!-- Step 3: Date & Time -->
+            <div class="step-panel d-none" id="step3">
+                <h6 class="mb-3">Choose date &amp; time <span class="text-muted small" id="doctorLabel"></span></h6>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Date</label>
+                        <input type="date" id="datePicker" class="form-control" min="{{ current_year }}-01-01">
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Available time slots</label>
+                        <div class="d-flex flex-wrap gap-2" id="slotList">
+                            <span class="text-muted">Pick a date to see available slots.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Confirm -->
+            <div class="step-panel d-none" id="step4">
+                <h6 class="mb-3">Confirm your appointment</h6>
+                <div class="card border-0 bg-light p-3 mb-3">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Department</dt><dd class="col-sm-8" id="cfDept">-</dd>
+                        <dt class="col-sm-4">Doctor</dt><dd class="col-sm-8" id="cfDoctor">-</dd>
+                        <dt class="col-sm-4">Date</dt><dd class="col-sm-8" id="cfDate">-</dd>
+                        <dt class="col-sm-4">Time</dt><dd class="col-sm-8" id="cfTime">-</dd>
+                    </dl>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Reason for visit (optional)</label>
+                    <textarea name="reason" class="form-control" rows="2"
+                              placeholder="Briefly describe your concern..."></textarea>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline-secondary" id="backBtn" disabled>
+                    <i class="bi bi-arrow-left"></i> Back
+                </button>
+                <button type="button" class="btn btn-primary" id="nextBtn">Next <i class="bi bi-arrow-right"></i></button>
+                <button type="submit" class="btn btn-success d-none" id="submitBtn">
+                    <i class="bi bi-check-circle"></i> Confirm Booking
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let step = 1;
+    const panels = [null, 'step1', 'step2', 'step3', 'step4'];
+    const backBtn = document.getElementById('backBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function showStep(n) {
+        step = n;
+        document.querySelectorAll('.step-panel').forEach(p => p.classList.add('d-none'));
+        document.getElementById(panels[n]).classList.remove('d-none');
+        document.querySelectorAll('.stepper li').forEach((li, i) => {
+            li.classList.toggle('active', i < n);
+        });
+        backBtn.disabled = n === 1;
+        nextBtn.classList.toggle('d-none', n === 4);
+        submitBtn.classList.toggle('d-none', n !== 4);
+    }
+
+    backBtn.addEventListener('click', () => { if (step > 1) showStep(step - 1); });
+    nextBtn.addEventListener('click', () => { if (step < 4) showStep(step + 1); });
+
+    // Department selection
+    document.querySelectorAll('.dept-card').forEach(card => {
+        card.addEventListener('click', function () {
+            document.querySelectorAll('.dept-card').forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            document.getElementById('departmentId').value = this.dataset.deptId;
+            document.getElementById('deptLabel').textContent = '(' + this.dataset.deptName + ')';
+            loadDoctors(this.dataset.deptId);
+            showStep(2);
+        });
+    });
+
+    async function loadDoctors(deptId) {
+        const list = document.getElementById('doctorList');
+        list.innerHTML = '<div class="col-12 text-center py-4"><div class="spinner-border text-primary"></div></div>';
+        try {
+            const res = await fetch('/appointments/api/doctors?department_id=' + deptId);
+            const doctors = await res.json();
+            if (!doctors.length) {
+                list.innerHTML = '<div class="col-12 text-center py-4 text-muted">No doctors available in this department yet.</div>';
+                return;
+            }
+            list.innerHTML = '';
+            doctors.forEach(doc => {
+                const col = document.createElement('div');
+                col.className = 'col-md-6';
+                col.innerHTML = '<button type="button" class="doctor-card card h-100 w-100 text-start" data-doctor-id="' + doc.id + '" data-doctor-name="' + doc.name + '">' +
+                    '<div class="card-body"><div class="d-flex align-items-center gap-2 mb-1">' +
+                    '<i class="bi bi-person-badge fs-4 text-primary"></i><strong>' + doc.name + '</strong></div>' +
+                    '<div class="text-muted small">' + doc.specialization + ' · ' + (doc.experience_years || 0) + ' yrs experience</div>' +
+                    '<div class="mt-2"><span class="badge text-bg-primary">Fee: $' + (doc.fee || '500') + '</span></div></div></button>';
+                col.querySelector('.doctor-card').addEventListener('click', function () {
+                    document.querySelectorAll('.doctor-card').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                    document.getElementById('doctorId').value = this.dataset.doctorId;
+                    document.getElementById('doctorLabel').textContent = '(' + this.dataset.doctorName + ')';
+                    document.getElementById('datePicker').value = '';
+                    document.getElementById('slotList').innerHTML = '<span class="text-muted">Pick a date to see available slots.</span>';
+                    document.getElementById('appointmentDate').value = '';
+                    document.getElementById('appointmentTime').value = '';
+                    showStep(3);
+                });
+                list.appendChild(col);
+            });
+        } catch (e) {
+            list.innerHTML = '<div class="col-12 text-center py-4 text-danger">Failed to load doctors.</div>';
+        }
+    }
+
+    // Date -> slots
+    document.getElementById('datePicker').addEventListener('change', async function () {
+        const date = this.value;
+        const doctorId = document.getElementById('doctorId').value;
+        const slotList = document.getElementById('slotList');
+        if (!date) return;
+        slotList.innerHTML = '<span class="text-muted">Loading...</span>';
+        try {
+            const res = await fetch('/appointments/api/slots?doctor_id=' + doctorId + '&date=' + date);
+            const data = await res.json();
+            if (!data.slots || !data.slots.length) {
+                slotList.innerHTML = '<span class="text-muted">No slots available on this date.</span>';
+                return;
+            }
+            slotList.innerHTML = '';
+            data.slots.forEach(slot => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'btn btn-outline-primary slot-btn';
+                b.textContent = slot;
+                b.addEventListener('click', function () {
+                    document.querySelectorAll('.slot-btn').forEach(s => s.classList.remove('active'));
+                    this.classList.add('active');
+                    document.getElementById('appointmentDate').value = date;
+                    document.getElementById('appointmentTime').value = slot;
+                });
+                slotList.appendChild(b);
+            });
+        } catch (e) {
+            slotList.innerHTML = '<span class="text-muted">Failed to load slots.</span>';
+        }
+    });
+
+    // Confirm step - fill summary
+    nextBtn.addEventListener('click', () => {
+        if (step === 2) {
+            if (!document.getElementById('doctorId').value) { alert('Please choose a doctor.'); return; }
+        }
+        if (step === 3) {
+            if (!document.getElementById('appointmentTime').value) { alert('Please choose a time slot.'); return; }
+            // Fill confirm summary
+            const dept = document.querySelector('.dept-card.selected');
+            const doc = document.querySelector('.doctor-card.selected');
+            document.getElementById('cfDept').textContent = dept ? dept.dataset.deptName : '-';
+            document.getElementById('cfDoctor').textContent = doc ? doc.dataset.doctorName : '-';
+            document.getElementById('cfDate').textContent = document.getElementById('appointmentDate').value;
+            document.getElementById('cfTime').textContent = document.getElementById('appointmentTime').value;
+        }
+        if (step < 4) showStep(step + 1);
+    });
+
+    // Ensure the date picker min is today (client side).
+    (function () {
+        const today = new Date();
+        const iso = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        document.getElementById('datePicker').min = iso;
+    })();
+</script>
+{% endblock %}

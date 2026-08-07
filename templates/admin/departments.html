@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Manage Departments{% endblock %}
+{% block page_title %}Manage Departments{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><strong><i class="bi bi-plus-lg"></i> Add Department</strong></div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('admin.departments') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label">Name *</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Nephrology" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Bootstrap icon</label>
+                        <input type="text" name="icon" class="form-control" placeholder="bi-activity" value="bi-activity">
+                    </div>
+                    <button class="btn btn-primary w-100"><i class="bi bi-check-lg"></i> Add</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="table-responsive card">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr><th>Icon</th><th>Name</th><th>Doctors</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for dept in departments %}
+                    <tr>
+                        <td><i class="bi {{ dept.icon or 'bi-activity' }} fs-5 text-primary"></i></td>
+                        <td>
+                            <strong>{{ dept.name }}</strong>
+                            <div class="text-muted small">{{ dept.description or '' }}</div>
+                        </td>
+                        <td>{{ dept.doctors.count() }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#editDept{{ dept.id }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <form method="post" action="{{ url_for('admin.delete_department', department_id=dept.id) }}"
+                                  onsubmit="return confirm('Delete {{ dept.name }}?')" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr class="collapse" id="editDept{{ dept.id }}">
+                        <td colspan="4">
+                            <form method="post" action="{{ url_for('admin.edit_department', department_id=dept.id) }}" class="row g-2">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <div class="col-md-4">
+                                    <input type="text" name="name" class="form-control" value="{{ dept.name }}" required>
+                                </div>
+                                <div class="col-md-5">
+                                    <input type="text" name="description" class="form-control" value="{{ dept.description or '' }}" placeholder="Description">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="text" name="icon" class="form-control" value="{{ dept.icon or 'bi-activity' }}">
+                                </div>
+                                <div class="col-md-1">
+                                    <button class="btn btn-sm btn-success"><i class="bi bi-check-lg"></i></button>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

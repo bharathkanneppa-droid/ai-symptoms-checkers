@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}AI Doctor Chat{% endblock %}
+{% block page_title %}AI Doctor Chat{% endblock %}
+{% block content %}
+
+<div class="card chat-card">
+    <div class="chat-header">
+        <div class="d-flex align-items-center gap-3">
+            <div class="chat-avatar"><i class="bi bi-robot"></i></div>
+            <div>
+                <strong>AI Healthcare Assistant</strong>
+                <div class="small text-muted"><span class="online-dot"></span> Online · educational tool</div>
+            </div>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-secondary" id="chatReset">
+                <i class="bi bi-arrow-counterclockwise"></i> New chat
+            </button>
+        </div>
+    </div>
+
+    <div class="chat-body" id="chatBody">
+        <div class="chat-message assistant">
+            <div class="chat-bubble">
+                Hello. I'm your AI Healthcare Assistant.
+                <br><br>
+                I'm an educational AI assistant, not a doctor. My suggestions are based on
+                statistical patterns and are not medical advice. For anything urgent, call
+                emergency services.
+                <br><br>
+                What symptoms are you experiencing?
+            </div>
+        </div>
+        {% for msg in history %}
+        <div class="chat-message {{ 'user' if msg.role == 'user' else 'assistant' }}">
+            <div class="chat-bubble">{{ msg.message|replace('\n', '<br>')|safe }}</div>
+        </div>
+        {% endfor %}
+        <div class="chat-typing" id="chatTyping" style="display:none">
+            <div class="chat-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
+        </div>
+    </div>
+
+    <div class="chat-input">
+        <input type="text" id="chatMessage" class="form-control" placeholder="Describe your symptoms... (e.g. 'I have fever and a cough')" autocomplete="off">
+        <button class="btn btn-primary" id="chatSend"><i class="bi bi-send"></i></button>
+    </div>
+</div>
+
+<!-- Prediction result panel (shown when the bot finishes) -->
+<div class="card mt-4 d-none" id="predictionPanel">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <strong><i class="bi bi-magic"></i> Analysis Result</strong>
+        <a href="{{ url_for('appointments.book') }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-calendar-plus"></i> Book an appointment
+        </a>
+    </div>
+    <div class="card-body" id="predictionBody"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const chatBody = document.getElementById('chatBody');
+    const chatInput = document.getElementById('chatMessage');
+    const sendBtn = document.getElementById('chatSend');
+    const typing = document.getElementById('chatTyping');
+    const predictionPanel = document.getElementById('predictionPanel');
+    const predictionBody = document.getElementById('predictionBody');
+
+    function scrollToBottom() { chatBody.scrollTop = chatBody.scrollHeight; }
+
+    function appendMessage(role, text) {
+        const el = document.createElement('div');
+        el.className = 'chat-message ' + role;
+        el.innerHTML = '<div class="chat-bubble">' + text.replace(/\n/g, '<br>') + '</div>';
+        chatBody.insertBefore(el, typing);
+        scrollToBottom();
+    }
+
+    function showPrediction(result) {
+        let html = '';
+        if (result.emergency) {
+            html += '<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> ' +
+                    'Some symptoms may be serious. Please seek medical attention promptly.</div>';
+        }
+        if (result.specialist) {
+            html += '<div class="alert alert-info"><i class="bi bi-person-badge"></i> ' +
+                    'Recommended specialist: <strong>' + result.specialist + '</strong></div>';
+        }
+        html += '<div class="mt-2">';
+        result.prediction.forEach(function (item, i) {
+            html += '<div class="prediction-row"><div class="d-flex justify-content-between">' +
+                    '<span>' + (i + 1) + '. <strong>' + item.disease + '</strong></span>' +
+                    '<span class="fw-bold text-primary">' + item.confidence + '%</span></div>' +
+                    '<div class="progress"><div class="progress-bar" style="width:' + item.confidence + '%"></div></div></div>';
+        });
+        html += '</div>';
+        predictionBody.innerHTML = html;
+        predictionPanel.classList.remove('d-none');
+        predictionPanel.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function send() {
+        const message = chatInput.value.trim();
+        if (!message) return;
+        chatInput.value = '';
+        appendMessage('user', message);
+        typing.style.display = 'block';
+        scrollToBottom();
+        sendBtn.disabled = true;
+
+        try {
+            const res = await fetch('/ai/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+            const data = await res.json();
+            typing.style.display = 'none';
+            if (data.reply) appendMessage('assistant', data.reply);
+            if (data.prediction) showPrediction(data);
+        } catch (e) {
+            typing.style.display = 'none';
+            appendMessage('assistant', 'Sorry, something went wrong. Please try again.');
+        } finally {
+            sendBtn.disabled = false;
+            chatInput.focus();
+        }
+    }
+
+    sendBtn.addEventListener('click', send);
+    chatInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') send();
+    });
+
+    document.getElementById('chatReset').addEventListener('click', async function () {
+        await fetch('/ai/api/reset', { method: 'POST' });
+        chatBody.querySelectorAll('.chat-message').forEach(function (el) {
+            if (!el.classList.contains('assistant') || el.innerText.includes("What symptoms")) return;
+            el.remove();
+        });
+        predictionPanel.classList.add('d-none');
+        location.reload();
+    });
+
+    scrollToBottom();
+    chatInput.focus();
+</script>
+{% endblock %}

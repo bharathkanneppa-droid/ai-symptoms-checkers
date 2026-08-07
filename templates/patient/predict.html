@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Disease Prediction{% endblock %}
+{% block page_title %}Disease Prediction{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <strong><i class="bi bi-magic"></i> Select your symptoms</strong>
+            </div>
+            <div class="card-body">
+                <div class="symptom-grid" id="symptomGrid">
+                    {% for symptom in symptoms %}
+                    <label class="symptom-chip">
+                        <input type="checkbox" value="{{ symptom.key }}" class="symptom-check">
+                        <span>{{ symptom.label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <span class="text-muted small" id="selectedCount">0 symptoms selected</span>
+                    <div>
+                        <button class="btn btn-outline-secondary btn-sm me-2" id="clearSymptoms">Clear</button>
+                        <button class="btn btn-primary" id="runPrediction">
+                            <i class="bi bi-search"></i> Predict
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header"><strong><i class="bi bi-graph-up"></i> Results</strong></div>
+            <div class="card-body" id="resultsBody">
+                <p class="text-muted mb-0">Select symptoms on the left and click <strong>Predict</strong>.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-warning mt-4">
+    <i class="bi bi-exclamation-triangle"></i>
+    <strong>Educational only.</strong> Results come from a machine-learning model trained on synthetic
+    data. They are statistical matches, not a diagnosis. Always consult a licensed doctor.
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const checks = document.querySelectorAll('.symptom-check');
+    const countLabel = document.getElementById('selectedCount');
+
+    function updateCount() {
+        const n = document.querySelectorAll('.symptom-check:checked').length;
+        countLabel.textContent = n + ' symptom' + (n === 1 ? '' : 's') + ' selected';
+    }
+    checks.forEach(function (c) { c.addEventListener('change', updateCount); });
+
+    document.getElementById('clearSymptoms').addEventListener('click', function () {
+        checks.forEach(function (c) { c.checked = false; });
+        updateCount();
+    });
+
+    document.getElementById('runPrediction').addEventListener('click', async function () {
+        const selected = Array.from(document.querySelectorAll('.symptom-check:checked'))
+            .map(function (c) { return c.value; });
+        const results = document.getElementById('resultsBody');
+
+        if (!selected.length) {
+            results.innerHTML = '<p class="text-warning mb-0">Please select at least one symptom.</p>';
+            return;
+        }
+        results.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div>' +
+            '<div class="text-muted mt-2">Analyzing with the AI model...</div></div>';
+
+        try {
+            const res = await fetch('/ai/api/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ symptoms: selected })
+            });
+            const data = await res.json();
+            if (data.error) {
+                results.innerHTML = '<p class="text-danger mb-0">' + data.error + '</p>';
+                return;
+            }
+            let html = '';
+            if (data.emergency) {
+                html += '<div class="alert alert-danger small"><i class="bi bi-exclamation-triangle"></i> ' +
+                        'Some symptoms may be serious - seek medical attention promptly.</div>';
+            }
+            if (data.specialist) {
+                html += '<div class="alert alert-info small"><i class="bi bi-person-badge"></i> ' +
+                        'Recommended specialist: <strong>' + data.specialist + '</strong></div>';
+            }
+            data.prediction.forEach(function (item, i) {
+                html += '<div class="prediction-row"><div class="d-flex justify-content-between">' +
+                        '<span>' + (i + 1) + '. <strong>' + item.disease + '</strong></span>' +
+                        '<span class="fw-bold text-primary">' + item.confidence + '%</span></div>' +
+                        '<div class="progress"><div class="progress-bar" style="width:' + item.confidence + '%"></div></div></div>';
+            });
+            html += '<div class="mt-3 text-center"><a href="{{ url_for("appointments.book") }}" class="btn btn-sm btn-primary">' +
+                    '<i class="bi bi-calendar-plus"></i> Book appointment</a></div>';
+            results.innerHTML = html;
+        } catch (e) {
+            results.innerHTML = '<p class="text-danger mb-0">Something went wrong. Try again.</p>';
+        }
+    });
+</script>
+{% endblock %}

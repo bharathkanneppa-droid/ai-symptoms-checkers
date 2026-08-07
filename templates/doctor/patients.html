@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Patients{% endblock %}
+{% block page_title %}Patients{% endblock %}
+{% block content %}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="{{ url_for('doctor.patients') }}" class="row g-2">
+            <div class="col-md-8">
+                <input type="text" name="q" class="form-control" placeholder="Search by name, phone or email..." value="{{ query }}">
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-primary w-100"><i class="bi bi-search"></i> Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if patients %}
+<div class="table-responsive card">
+    <table class="table table-hover align-middle mb-0">
+        <thead>
+            <tr><th>Name</th><th>Phone</th><th>Gender</th><th>Blood</th><th>Records</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+            {% for p in patients %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('doctor.patient_detail', patient_id=p.id) }}">{{ p.full_name }}</a>
+                    <div class="text-muted small">{{ p.user.email }}</div>
+                </td>
+                <td>{{ p.phone or '-' }}</td>
+                <td>{{ p.gender or '-' }}</td>
+                <td>{{ p.blood_group or '-' }}</td>
+                <td>{{ p.medical_records.count() }}</td>
+                <td>
+                    <a href="{{ url_for('doctor.patient_detail', patient_id=p.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                    <a href="{{ url_for('doctor.new_prescription', patient_id=p.id) }}" class="btn btn-sm btn-outline-success">Rx</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card"><div class="card-body text-center py-5 text-muted">No patients found.</div></div>
+{% endif %}
+{% endblock %}

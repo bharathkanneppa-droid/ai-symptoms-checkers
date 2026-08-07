@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Appointments{% endblock %}
+{% block page_title %}My Appointments{% endblock %}
+{% block content %}
+
+<div class="mb-3">
+    <button class="btn btn-sm {{ 'btn-primary' if not active else 'btn-outline-primary' }}" onclick="location.href='{{ url_for('doctor.appointments') }}'">All</button>
+    <button class="btn btn-sm {{ 'btn-primary' if active == 'pending' else 'btn-outline-primary' }}" onclick="location.href='{{ url_for('doctor.appointments', status='pending') }}'">Pending</button>
+    <button class="btn btn-sm {{ 'btn-primary' if active == 'accepted' else 'btn-outline-primary' }}" onclick="location.href='{{ url_for('doctor.appointments', status='accepted') }}'">Accepted</button>
+    <button class="btn btn-sm {{ 'btn-primary' if active == 'completed' else 'btn-outline-primary' }}" onclick="location.href='{{ url_for('doctor.appointments', status='completed') }}'">Completed</button>
+    <button class="btn btn-sm {{ 'btn-primary' if active == 'rejected' else 'btn-outline-primary' }}" onclick="location.href='{{ url_for('doctor.appointments', status='rejected') }}'">Rejected</button>
+</div>
+
+{% if appointments %}
+<div class="table-responsive card">
+    <table class="table table-hover align-middle mb-0">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Patient</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for appt in appointments %}
+            <tr>
+                <td>{{ appt.id }}</td>
+                <td>
+                    <a href="{{ url_for('doctor.patient_detail', patient_id=appt.patient_id) }}">{{ appt.patient.full_name }}</a>
+                    <div class="text-muted small">{{ appt.patient.phone or '' }}</div>
+                </td>
+                <td>{{ appt.appointment_date.strftime('%d %b %Y') }}</td>
+                <td>{{ appt.appointment_time }}</td>
+                <td class="small">{{ appt.reason or '-' }}</td>
+                <td><span class="badge text-bg-{{ appt.badge_class }}">{{ appt.status|upper }}</span></td>
+                <td>
+                    {% if appt.status == 'pending' %}
+                    <form method="post" action="{{ url_for('doctor.appointment_action', appointment_id=appt.id, action='accept') }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-success"><i class="bi bi-check-lg"></i> Accept</button>
+                    </form>
+                    <form method="post" action="{{ url_for('doctor.appointment_action', appointment_id=appt.id, action='reject') }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i> Reject</button>
+                    </form>
+                    {% elif appt.status == 'accepted' %}
+                    <a href="{{ url_for('doctor.new_prescription', patient_id=appt.patient_id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-file-earmark-plus"></i> Rx
+                    </a>
+                    <form method="post" action="{{ url_for('doctor.appointment_action', appointment_id=appt.id, action='complete') }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-outline-success"><i class="bi bi-check2-circle"></i> Complete</button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card"><div class="card-body text-center py-5 text-muted">
+    <i class="bi bi-calendar-x fs-1"></i>
+    <p class="mt-2">No appointments found.</p>
+</div></div>
+{% endif %}
+{% endblock %}

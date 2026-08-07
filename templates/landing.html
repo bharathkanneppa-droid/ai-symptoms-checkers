@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Welcome{% endblock %}
+{% block content %}
+<div class="landing-hero">
+    <div class="row align-items-center g-4">
+        <div class="col-lg-6">
+            <span class="badge rounded-pill text-bg-primary mb-3"><i class="bi bi-stars"></i> Powered by AI</span>
+            <h1 class="display-4 fw-bold">Your intelligent<br>healthcare companion</h1>
+            <p class="lead text-muted">
+                Check symptoms with our AI assistant, connect with specialist doctors,
+                book appointments and manage your prescriptions - all in one place.
+            </p>
+            <div class="mt-4">
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-2">
+                    <i class="bi bi-person-plus"></i> Get started
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-box-arrow-in-right"></i> Login
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6 d-none d-lg-block text-center">
+            <div class="landing-illustration">
+                <i class="bi bi-hospital"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="feature-icon"><i class="bi bi-robot"></i></div>
+                <h5>AI Symptom Checker</h5>
+                <p class="text-muted mb-0">Chat with an intelligent assistant that collects symptoms and predicts likely conditions with confidence scores.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="feature-icon"><i class="bi bi-calendar-heart"></i></div>
+                <h5>Easy Appointments</h5>
+                <p class="text-muted mb-0">Choose a department, pick a doctor, and book a time slot that fits your schedule.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="feature-icon"><i class="bi bi-file-earmark-medical"></i></div>
+                <h5>Digital Prescriptions</h5>
+                <p class="text-muted mb-0">Doctors write prescriptions online. Patients view, print and download them as PDF.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-warning border-0 mt-4">
+    <i class="bi bi-exclamation-triangle"></i>
+    This platform is an <strong>educational demo</strong>. The AI predictions are based on a synthetic
+    dataset and are not medical advice. For real health concerns, consult a licensed doctor.
+    For emergencies, call your local emergency services.
+</div>
+{% endblock %}

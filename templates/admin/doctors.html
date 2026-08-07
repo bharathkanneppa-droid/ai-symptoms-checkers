@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Manage Doctors{% endblock %}
+{% block page_title %}Manage Doctors{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-end mb-3">
+    <a href="{{ url_for('admin.add_doctor') }}" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Add Doctor</a>
+</div>
+
+<div class="table-responsive card">
+    <table class="table table-hover align-middle mb-0">
+        <thead>
+            <tr>
+                <th>Doctor</th>
+                <th>Specialization</th>
+                <th>Department</th>
+                <th>Experience</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in doctors %}
+            <tr>
+                <td>
+                    <strong>{{ d.full_name }}</strong>
+                    <div class="text-muted small">{{ d.user.email }}</div>
+                </td>
+                <td>{{ d.specialization or '-' }}</td>
+                <td>{{ d.department.name if d.department else '-' }}</td>
+                <td>{{ d.experience_years or 0 }} yrs</td>
+                <td>
+                    <span class="badge {{ 'text-bg-success' if d.is_available else 'text-bg-secondary' }}">
+                        {{ 'Available' if d.is_available else 'Unavailable' }}
+                    </span>
+                </td>
+                <td>
+                    <form method="post" action="{{ url_for('admin.toggle_doctor', doctor_id=d.id) }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <i class="bi {{ 'bi-toggle-on' if d.is_available else 'bi-toggle-off' }}"></i>
+                        </button>
+                    </form>
+                    <form method="post" action="{{ url_for('admin.delete_doctor', doctor_id=d.id) }}"
+                          onsubmit="return confirm('Delete {{ d.full_name }}? This cannot be undone.')" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

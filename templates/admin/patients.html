@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Manage Patients{% endblock %}
+{% block page_title %}Manage Patients{% endblock %}
+{% block content %}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="{{ url_for('admin.patients') }}" class="row g-2">
+            <div class="col-md-8">
+                <input type="text" name="q" class="form-control" placeholder="Search by name or email..." value="{{ query }}">
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-primary w-100"><i class="bi bi-search"></i> Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive card">
+    <table class="table table-hover align-middle mb-0">
+        <thead>
+            <tr><th>Name</th><th>Email</th><th>Phone</th><th>Appointments</th><th>Joined</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+            {% for p in patients %}
+            <tr>
+                <td><strong>{{ p.full_name }}</strong></td>
+                <td>{{ p.user.email }}</td>
+                <td>{{ p.phone or '-' }}</td>
+                <td>{{ p.appointments.count() }}</td>
+                <td>{{ p.created_at.strftime('%d %b %Y') }}</td>
+                <td>
+                    <span class="badge {{ 'text-bg-success' if p.user.is_active_flag else 'text-bg-secondary' }}">
+                        {{ 'Active' if p.user.is_active_flag else 'Disabled' }}
+                    </span>
+                </td>
+                <td>
+                    <form method="post" action="{{ url_for('admin.toggle_patient', patient_id=p.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-outline-secondary">
+                            {{ 'Disable' if p.user.is_active_flag else 'Enable' }}
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

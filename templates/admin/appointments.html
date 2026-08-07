@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Manage Appointments{% endblock %}
+{% block page_title %}Manage Appointments{% endblock %}
+{% block content %}
+
+<div class="mb-3">
+    <button class="btn btn-sm {{ 'btn-primary' if not active else 'btn-outline-primary' }}" onclick="location.href='{{ url_for('admin.appointments') }}'">All</button>
+    <button class="btn btn-sm {{ 'btn-primary' if active == 'pending' else 'btn-outline-primary' }}" onclick="location.href='{{ url_for('admin.appointments', status='pending') }}'">Pending</button>
+    <button class="btn btn-sm {{ 'btn-primary' if active == 'accepted' else 'btn-outline-primary' }}" onclick="location.href='{{ url_for('admin.appointments', status='accepted') }}'">Accepted</button>
+    <button class="btn btn-sm {{ 'btn-primary' if active == 'completed' else 'btn-outline-primary' }}" onclick="location.href='{{ url_for('admin.appointments', status='completed') }}'">Completed</button>
+</div>
+
+<div class="table-responsive card">
+    <table class="table table-hover align-middle mb-0">
+        <thead>
+            <tr><th>#</th><th>Patient</th><th>Doctor</th><th>Department</th><th>Date</th><th>Time</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+            {% for appt in appointments %}
+            <tr>
+                <td>{{ appt.id }}</td>
+                <td>{{ appt.patient.full_name }}</td>
+                <td>{{ appt.doctor.full_name }}</td>
+                <td>{{ appt.department.name if appt.department else '-' }}</td>
+                <td>{{ appt.appointment_date.strftime('%d %b %Y') }}</td>
+                <td>{{ appt.appointment_time }}</td>
+                <td><span class="badge text-bg-{{ appt.badge_class }}">{{ appt.status|upper }}</span></td>
+                <td>
+                    {% if appt.status in ['pending', 'accepted'] %}
+                    <form method="post" action="{{ url_for('admin.cancel_appointment', appointment_id=appt.id) }}"
+                          onsubmit="return confirm('Cancel this appointment?')">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle"></i> Cancel</button>
+                    </form>
+                    {% else %}
+                    -
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="8" class="text-center text-muted py-4">No appointments found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

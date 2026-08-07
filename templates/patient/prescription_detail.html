@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Prescription {{ prescription.id }}{% endblock %}
+{% block page_title %}Prescription RX-{{ '%05d' % prescription.id }}{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-end gap-2 mb-3">
+    <a href="{{ url_for('prescriptions.download', prescription_id=prescription.id) }}" class="btn btn-success">
+        <i class="bi bi-download"></i> Download PDF
+    </a>
+    <button class="btn btn-outline-primary" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+</div>
+
+<div class="card prescription-sheet">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between border-bottom pb-3">
+            <div>
+                <h4 class="text-primary mb-0"><i class="bi bi-hospital"></i> {{ app_name }}</h4>
+                <div class="text-muted small">AI Healthcare Management System</div>
+            </div>
+            <div class="text-end text-muted small">
+                <div>Date: {{ prescription.created_at.strftime('%d %b %Y') }}</div>
+                <div>Rx No: RX-{{ '%05d' % prescription.id }}</div>
+            </div>
+        </div>
+
+        <div class="row mt-3 g-3">
+            <div class="col-md-6">
+                <div class="small text-muted">PATIENT</div>
+                <div class="fw-bold">{{ prescription.patient.full_name }}</div>
+                <div class="small">{{ prescription.patient.age or '' }} {{ prescription.patient.gender or '' }}</div>
+                <div class="small">{{ prescription.patient.blood_group or '' }}</div>
+                <div class="small">{{ prescription.patient.phone or '' }}</div>
+            </div>
+            <div class="col-md-6">
+                <div class="small text-muted">DOCTOR</div>
+                <div class="fw-bold">{{ prescription.doctor.full_name if prescription.doctor else 'Hospital Doctor' }}</div>
+                <div class="small">{{ prescription.doctor.specialization if prescription.doctor else '' }}</div>
+                <div class="small">{{ prescription.doctor.qualification if prescription.doctor else '' }}</div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <h6 class="text-primary"><i class="bi bi-clipboard2-pulse"></i> Diagnosis</h6>
+            <p class="mb-0">{{ prescription.diagnosis }}</p>
+        </div>
+
+        <div class="mt-4">
+            <h6 class="text-primary"><i class="bi bi-capsule"></i> Medicines</h6>
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-primary">
+                        <tr><th>#</th><th>Medicine</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Instructions</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for item in prescription.items %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td><strong>{{ item.medicine_name }}</strong></td>
+                            <td>{{ item.dosage or '-' }}</td>
+                            <td>{{ item.frequency or '-' }}</td>
+                            <td>{{ item.duration or '-' }}</td>
+                            <td>{{ item.instructions or '-' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center text-muted">No medicines listed.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if prescription.notes %}
+        <div class="mt-4">
+            <h6 class="text-primary"><i class="bi bi-journal-text"></i> Notes</h6>
+            <p class="mb-0">{{ prescription.notes }}</p>
+        </div>
+        {% endif %}
+
+        {% if prescription.follow_up_in_days %}
+        <div class="alert alert-light border mt-3 small">
+            <i class="bi bi-calendar-event"></i> Follow up in {{ prescription.follow_up_in_days }} day(s).
+        </div>
+        {% endif %}
+
+        <div class="mt-5 d-flex justify-content-end">
+            <div class="text-center">
+                <div class="border-top px-4 pt-2 small text-muted">Doctor's Signature</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
