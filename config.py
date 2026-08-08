@@ -16,8 +16,17 @@ load_dotenv(BASE_DIR / ".env")
 
 
 def _database_uri():
-    """Prefer a provided DATABASE_URL (PostgreSQL); fall back to local SQLite."""
-    uri = os.environ.get("DATABASE_URL")
+    """Prefer a provided PostgreSQL URL; fall back to local SQLite.
+
+    Accepts DATABASE_URL plus the vars Vercel Postgres injects
+    (POSTGRES_URL_NON_POOLING is preferred: it avoids the pgbouncer-style
+    transaction pooling that breaks long-lived SQLAlchemy sessions).
+    """
+    uri = (
+        os.environ.get("DATABASE_URL")
+        or os.environ.get("POSTGRES_URL_NON_POOLING")
+        or os.environ.get("POSTGRES_URL")
+    )
     if uri:
         # SQLAlchemy 2.x expects the postgresql:// scheme, not postgres://
         return uri.replace("postgres://", "postgresql://", 1)
@@ -33,7 +42,7 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
 
     # --- Auth / sessions --------------------------------------------------------
-    REMEMBER_COOKIE_DURATION = timedelta(days=os.environ.get("REMEMBER_DAYS", 14))
+    REMEMBER_COOKIE_DURATION = timedelta(days=int(os.environ.get("REMEMBER_DAYS", 14)))
     REMEMBER_COOKIE_HTTPONLY = True
 
     # --- CSRF ---------------------------------------------------------------------
