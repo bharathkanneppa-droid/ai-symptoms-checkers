@@ -22,4 +22,3 @@ reportlab==4.2.5
 # Config / deployment
 python-dotenv==1.1.0
 gunicorn==23.0.0
-vercel-wsgi==0.0.2
