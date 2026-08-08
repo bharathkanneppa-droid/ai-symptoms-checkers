@@ -72,3 +72,8 @@ class Config:
     # Without it, the app falls back to the built-in rule-based symptom bot.
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
     GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
+
+    # --- Boot behaviour ---------------------------------------------------------------
+    # Set to "false" when the database is loaded by other means (e.g. a one-time
+    # migration from the local database) to avoid double-seeding.
+    SEED_DB = os.environ.get("SEED_DB", "true").lower() == "true"

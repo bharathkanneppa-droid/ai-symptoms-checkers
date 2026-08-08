@@ -47,10 +47,16 @@ DEMO_DOCTORS = [
 ]
 
 
-def seed_if_empty():
-    """Create tables and seed baseline data. Safe to call on every boot."""
+def seed_if_empty(seed=True):
+    """Create tables and seed baseline data. Safe to call on every boot.
+
+    Pass ``seed=False`` when the database is populated by other means (e.g. a
+    one-time data migration) so nothing gets double-seeded.
+    """
     db.create_all()
     _migrate_chat_sessions()
+    if not seed:
+        return
     _migrate_chat_sessions()
 
     # --- Admin ---------------------------------------------------------

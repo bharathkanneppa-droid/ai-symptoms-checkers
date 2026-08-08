@@ -89,7 +89,7 @@ def create_app(config_class=Config):
 
     # Create tables and seed demo data on first run.
     with app.app_context():
-        seed_if_empty()
+        seed_if_empty(seed=Config.SEED_DB)
 
     return app
 
