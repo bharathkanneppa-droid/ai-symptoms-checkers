@@ -1,17 +1,21 @@
 """AI Doctor: conversational chat + direct symptom prediction endpoints."""
 import json
+import logging
 
 from flask import (
     Blueprint, jsonify, render_template, request, session,
 )
 from flask_login import current_user, login_required
 
+from ai import gemini
 from ai.predictor import get_predictor
 from chatbot.engine import get_bot
 from chatbot.symptom_db import CONDITIONS
 from database.db import db
 from models import ChatHistory, PredictionHistory
 from utils.decorators import patient_required
+
+logger = logging.getLogger(__name__)
 
 ai_bp = Blueprint("ai", __name__, url_prefix="/ai")
 
@@ -54,8 +58,9 @@ def api_chat():
     if not message:
         return jsonify({"error": "Empty message"}), 400
 
-    state = dict(session.get(STATE_KEY, {}))
-    result = get_bot().turn(message, state)
+    # Live Gemini conversations keep a rolling transcript in the session.
+    transcript = list(session.get("ai_transcript", []))[-12:]
+    result = _run_engine(message, transcript)
 
     # Persist the conversation transcript.
     db.session.add(ChatHistory(user_id=current_user.id, role="user", message=message))
@@ -83,13 +88,45 @@ def api_chat():
         )
     db.session.commit()
 
-    # Persist next-turn state, or clear it if the user reset the chat.
+    # Keep the transcript up to date for the next Gemini turn.
+    transcript.append({"role": "user", "text": message})
+    transcript.append({"role": "assistant", "text": result["reply"]})
+    session["ai_transcript"] = transcript[-20:]
+    session.modified = True
+
+    # Persist next-turn state for the rule-based bot, or clear it on reset.
     if result["reset"]:
-        session.pop(STATE_KEY, None)
+        session.pop("ai_doctor_state", None)
     else:
-        session[STATE_KEY] = result["state"]
+        session["ai_doctor_state"] = result["state"]
 
     return jsonify(result)
+
+
+def _run_engine(message, transcript):
+    """Drive the conversation with Gemini when configured; else the rule bot."""
+    state = dict(session.get("ai_doctor_state", {}))
+
+    if gemini.is_enabled():
+        try:
+            symptoms = state.get("symptoms", [])
+            reply = gemini.chat(message, history=transcript, symptoms=symptoms)
+            return {
+                "reply": reply,
+                "symptoms": symptoms,
+                "negatives": state.get("negatives", []),
+                "prediction": None,
+                "specialist": None,
+                "emergency": False,
+                "finished": False,
+                "reset": False,
+                "turns": state.get("turns", 0) + 1,
+                "state": state,
+            }
+        except gemini.GeminiError:
+            logger.warning("Gemini unavailable, falling back to rule-based bot")
+
+    return get_bot().turn(message, state)
 
 
 @ai_bp.route("/api/predict", methods=["POST"])
@@ -138,4 +175,5 @@ def api_predict():
 @login_required
 def api_reset():
     session.pop(STATE_KEY, None)
+    session.pop("ai_transcript", None)
     return jsonify({"ok": True})

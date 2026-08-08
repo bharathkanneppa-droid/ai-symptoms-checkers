@@ -12,6 +12,7 @@ env/
 # Database (dev only - keep backups, don't commit live data)
 medical.db
 medical_legacy_backup.db
+medical_keep.db.bak
 *.sqlite3
 
 # IDE / OS

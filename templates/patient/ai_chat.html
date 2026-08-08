@@ -43,6 +43,9 @@
 
     <div class="chat-input">
         <input type="text" id="chatMessage" class="form-control" placeholder="Describe your symptoms... (e.g. 'I have fever and a cough')" autocomplete="off">
+        <button class="btn btn-outline-secondary" id="voiceBtn" title="Speak your symptoms" type="button">
+            <i class="bi bi-mic"></i>
+        </button>
         <button class="btn btn-primary" id="chatSend"><i class="bi bi-send"></i></button>
     </div>
 </div>
@@ -134,6 +137,59 @@
     chatInput.addEventListener('keydown', function (e) {
         if (e.key === 'Enter') send();
     });
+
+    // ---- Voice input (Web Speech API) ----
+    const voiceBtn = document.getElementById('voiceBtn');
+    let recognizing = false;
+    let recognition = null;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        recognition.onresult = function (event) {
+            const transcript = event.results[0][0].transcript;
+            chatInput.value = transcript;
+            recognizing = false;
+            voiceBtn.classList.remove('btn-danger');
+            voiceBtn.title = 'Speak your symptoms';
+            send();
+        };
+        recognition.onerror = function (event) {
+            recognizing = false;
+            voiceBtn.classList.remove('btn-danger');
+            voiceBtn.title = 'Speak your symptoms';
+            if (event.error !== 'aborted' && event.error !== 'no-speech') {
+                chatInput.placeholder = 'Mic error: ' + event.error + '. Try typing instead.';
+            }
+        };
+        recognition.onend = function () {
+            recognizing = false;
+            voiceBtn.classList.remove('btn-danger');
+            voiceBtn.title = 'Speak your symptoms';
+        };
+        voiceBtn.addEventListener('click', function () {
+            if (recognizing) {
+                recognition.stop();
+                recognizing = false;
+                voiceBtn.classList.remove('btn-danger');
+                voiceBtn.title = 'Speak your symptoms';
+                return;
+            }
+            try {
+                recognition.start();
+                recognizing = true;
+                voiceBtn.classList.add('btn-danger');
+                voiceBtn.title = 'Listening... click to stop';
+            } catch (e) {
+                chatInput.placeholder = 'Could not start microphone.';
+            }
+        });
+    } else {
+        voiceBtn.disabled = true;
+        voiceBtn.title = 'Voice input not supported in this browser (try Chrome or Edge)';
+    }
 
     document.getElementById('chatReset').addEventListener('click', async function () {
         await fetch('/ai/api/reset', { method: 'POST' });

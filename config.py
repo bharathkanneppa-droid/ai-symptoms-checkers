@@ -66,3 +66,9 @@ class Config:
     APP_NAME = "MediAssist AI"
     UPLOAD_FOLDER = BASE_DIR / "static" / "uploads"
     MAX_CONTENT_LENGTH = 8 * 1024 * 1024
+
+    # --- AI (Google Gemini) ---------------------------------------------------------
+    # When GEMINI_API_KEY is set, the AI Doctor chat uses the live Gemini model.
+    # Without it, the app falls back to the built-in rule-based symptom bot.
+    GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+    GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
