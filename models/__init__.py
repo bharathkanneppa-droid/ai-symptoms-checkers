@@ -11,6 +11,7 @@ from models.department import Department
 from models.appointment import Appointment
 from models.medical_history import MedicalHistory
 from models.prescription import Prescription, PrescriptionItem
+from models.chat_session import ChatSession
 from models.chat_history import ChatHistory
 from models.notification import Notification
 from models.doctor_availability import DoctorAvailability
@@ -26,6 +27,7 @@ __all__ = [
     "Prescription",
     "PrescriptionItem",
     "ChatHistory",
+    "ChatSession",
     "Notification",
     "DoctorAvailability",
     "PredictionHistory",

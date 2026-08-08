@@ -50,6 +50,8 @@ DEMO_DOCTORS = [
 def seed_if_empty():
     """Create tables and seed baseline data. Safe to call on every boot."""
     db.create_all()
+    _migrate_chat_sessions()
+    _migrate_chat_sessions()
 
     # --- Admin ---------------------------------------------------------
     from models import User
@@ -168,3 +170,50 @@ def seed_if_empty():
         logger.info("Seeded demo patient (password: patient123)")
 
     db.session.commit()
+
+
+def _migrate_chat_sessions():
+    """One-off schema migrations for tables created before a model change.
+
+    ``db.create_all()`` never alters existing tables, so databases created
+    before the ``chat_sessions`` feature need the ``session_id`` column added
+    by hand, and any orphaned messages get grouped into a legacy session.
+    Works on both SQLite and PostgreSQL.
+    """
+    from sqlalchemy import inspect
+
+    from models import ChatHistory, ChatSession
+
+    if "chat_history" not in inspect(db.engine).get_table_names():
+        return
+
+    columns = {col["name"] for col in inspect(db.engine).get_columns("chat_history")}
+    if "session_id" not in columns:
+        with db.engine.begin() as conn:
+            conn.execute(
+                db.text(
+                    "ALTER TABLE chat_history "
+                    "ADD COLUMN session_id INTEGER "
+                    "REFERENCES chat_sessions(id) ON DELETE CASCADE"
+                )
+            )
+        logger.info("Migrated chat_history: added session_id column")
+
+    # Group any pre-existing messages (that have no session) per user.
+    legacy = (
+        db.session.query(ChatHistory.user_id)
+        .filter(ChatHistory.session_id.is_(None))
+        .distinct()
+        .all()
+    )
+    for (user_id,) in legacy:
+        chat_session = ChatSession(user_id=user_id, title="Earlier conversation")
+        db.session.add(chat_session)
+        db.session.flush()
+        ChatHistory.query.filter_by(user_id=user_id, session_id=None).update(
+            {"session_id": chat_session.id}
+        )
+    if legacy:
+        db.session.commit()
+        logger.info("Backfilled %d legacy chat session(s)", len(legacy))
+

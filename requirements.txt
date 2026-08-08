@@ -10,6 +10,7 @@ requests>=2.31.0
 
 # Database
 SQLAlchemy==2.0.41
+psycopg2-binary==2.9.10
 
 # Machine learning (reused existing artifacts)
 scikit-learn==1.6.0

@@ -1,8 +1,13 @@
 """Public routes: landing page and role-based post-login redirect."""
-from flask import Blueprint, redirect, render_template, url_for
+from flask import Blueprint, jsonify, redirect, render_template, url_for
 from flask_login import current_user
 
 main_bp = Blueprint("main", __name__)
+
+
+@main_bp.route("/health")
+def health():
+    return jsonify({"status": "ok"})
 
 
 @main_bp.route("/")

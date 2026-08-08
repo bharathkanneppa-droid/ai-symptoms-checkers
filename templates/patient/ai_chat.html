@@ -3,62 +3,92 @@
 {% block page_title %}AI Doctor Chat{% endblock %}
 {% block content %}
 
-<div class="card chat-card">
-    <div class="chat-header">
-        <div class="d-flex align-items-center gap-3">
-            <div class="chat-avatar"><i class="bi bi-robot"></i></div>
-            <div>
-                <strong>AI Healthcare Assistant</strong>
-                <div class="small text-muted"><span class="online-dot"></span> Online · educational tool</div>
+<div class="row g-3">
+    <!-- ======================= SESSION PICKER ======================= -->
+    <div class="col-lg-3 col-md-4">
+        <div class="card sessions-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong><i class="bi bi-clock-history"></i> Conversations</strong>
+                <button class="btn btn-sm btn-primary" id="newSession" title="Start a new chat">
+                    <i class="bi bi-plus-lg"></i> New
+                </button>
+            </div>
+            <div class="sessions-list" id="sessionList">
+                {% for s in sessions %}
+                <div class="session-item {{ 'active' if active and active.id == s.id }}"
+                     data-session-id="{{ s.id }}">
+                    <span class="session-title text-truncate">{{ s.title or 'New chat' }}</span>
+                    <span class="session-delete" data-delete-id="{{ s.id }}" title="Delete conversation">
+                        <i class="bi bi-x-lg"></i>
+                    </span>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4" id="noSessions">No conversations yet</div>
+                {% endfor %}
             </div>
         </div>
-        <div>
-            <button class="btn btn-sm btn-outline-secondary" id="chatReset">
-                <i class="bi bi-arrow-counterclockwise"></i> New chat
-            </button>
-        </div>
     </div>
 
-    <div class="chat-body" id="chatBody">
-        <div class="chat-message assistant">
-            <div class="chat-bubble">
-                Hello. I'm your AI Healthcare Assistant.
-                <br><br>
-                I'm an educational AI assistant, not a doctor. My suggestions are based on
-                statistical patterns and are not medical advice. For anything urgent, call
-                emergency services.
-                <br><br>
-                What symptoms are you experiencing?
+    <!-- ======================= CHAT ======================= -->
+    <div class="col-lg-9 col-md-8">
+        <div class="card chat-card">
+            <div class="chat-header">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="chat-avatar"><i class="bi bi-robot"></i></div>
+                    <div>
+                        <strong>AI Healthcare Assistant</strong>
+                        <div class="small text-muted"><span class="online-dot"></span> Online · educational tool</div>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary" id="chatReset">
+                        <i class="bi bi-arrow-counterclockwise"></i> New chat
+                    </button>
+                </div>
+            </div>
+
+            <div class="chat-body" id="chatBody">
+                <div class="chat-message assistant" id="welcomeMessage">
+                    <div class="chat-bubble">
+                        Hello. I'm your AI Healthcare Assistant.
+                        <br><br>
+                        I'm an educational AI assistant, not a doctor. My suggestions are based on
+                        statistical patterns and are not medical advice. For anything urgent, call
+                        emergency services.
+                        <br><br>
+                        What symptoms are you experiencing?
+                    </div>
+                </div>
+                {% for msg in history %}
+                <div class="chat-message {{ 'user' if msg.role == 'user' else 'assistant' }}">
+                    <div class="chat-bubble">{{ msg.message|replace('\n', '<br>')|safe }}</div>
+                </div>
+                {% endfor %}
+                <div class="chat-typing" id="chatTyping" style="display:none">
+                    <div class="chat-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
+                </div>
+            </div>
+
+            <div class="chat-input">
+                <input type="text" id="chatMessage" class="form-control" placeholder="Describe your symptoms... (e.g. 'I have fever and a cough')" autocomplete="off">
+                <button class="btn btn-outline-secondary" id="voiceBtn" title="Speak your symptoms" type="button">
+                    <i class="bi bi-mic"></i>
+                </button>
+                <button class="btn btn-primary" id="chatSend"><i class="bi bi-send"></i></button>
             </div>
         </div>
-        {% for msg in history %}
-        <div class="chat-message {{ 'user' if msg.role == 'user' else 'assistant' }}">
-            <div class="chat-bubble">{{ msg.message|replace('\n', '<br>')|safe }}</div>
-        </div>
-        {% endfor %}
-        <div class="chat-typing" id="chatTyping" style="display:none">
-            <div class="chat-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>
-        </div>
-    </div>
 
-    <div class="chat-input">
-        <input type="text" id="chatMessage" class="form-control" placeholder="Describe your symptoms... (e.g. 'I have fever and a cough')" autocomplete="off">
-        <button class="btn btn-outline-secondary" id="voiceBtn" title="Speak your symptoms" type="button">
-            <i class="bi bi-mic"></i>
-        </button>
-        <button class="btn btn-primary" id="chatSend"><i class="bi bi-send"></i></button>
+        <!-- Prediction result panel (shown when the bot finishes) -->
+        <div class="card mt-4 d-none" id="predictionPanel">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong><i class="bi bi-magic"></i> Analysis Result</strong>
+                <a href="{{ url_for('appointments.book') }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-calendar-plus"></i> Book an appointment
+                </a>
+            </div>
+            <div class="card-body" id="predictionBody"></div>
+        </div>
     </div>
-</div>
-
-<!-- Prediction result panel (shown when the bot finishes) -->
-<div class="card mt-4 d-none" id="predictionPanel">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <strong><i class="bi bi-magic"></i> Analysis Result</strong>
-        <a href="{{ url_for('appointments.book') }}" class="btn btn-sm btn-primary">
-            <i class="bi bi-calendar-plus"></i> Book an appointment
-        </a>
-    </div>
-    <div class="card-body" id="predictionBody"></div>
 </div>
 {% endblock %}
 
@@ -70,7 +100,10 @@
     const typing = document.getElementById('chatTyping');
     const predictionPanel = document.getElementById('predictionPanel');
     const predictionBody = document.getElementById('predictionBody');
+    const welcomeMessage = document.getElementById('welcomeMessage');
+    const sessionList = document.getElementById('sessionList');
     const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    let activeSessionId = {{ active.id if active else 'null' }};
 
     function scrollToBottom() { chatBody.scrollTop = chatBody.scrollHeight; }
 
@@ -80,6 +113,13 @@
         el.innerHTML = '<div class="chat-bubble">' + text.replace(/\n/g, '<br>') + '</div>';
         chatBody.insertBefore(el, typing);
         scrollToBottom();
+    }
+
+    function clearMessages() {
+        chatBody.querySelectorAll('.chat-message').forEach(function (el) {
+            if (el !== welcomeMessage) el.remove();
+        });
+        predictionPanel.classList.add('d-none');
     }
 
     function showPrediction(result) {
@@ -105,6 +145,94 @@
         predictionPanel.scrollIntoView({ behavior: 'smooth' });
     }
 
+    // ---- Session picker ---------------------------------------------------
+    function renderSessionList(list) {
+        sessionList.innerHTML = '';
+        if (!list.length) {
+            sessionList.innerHTML = '<div class="text-center text-muted py-4">No conversations yet</div>';
+            return;
+        }
+        list.forEach(function (s) {
+            const item = document.createElement('div');
+            item.className = 'session-item' + (s.id === activeSessionId ? ' active' : '');
+            item.dataset.sessionId = s.id;
+
+            const title = document.createElement('span');
+            title.className = 'session-title text-truncate';
+            title.textContent = s.title || 'New chat';
+            title.title = s.title || 'New chat';
+
+            const del = document.createElement('span');
+            del.className = 'session-delete';
+            del.title = 'Delete conversation';
+            del.dataset.deleteId = s.id;
+            del.innerHTML = '<i class="bi bi-x-lg"></i>';
+
+            item.appendChild(title);
+            item.appendChild(del);
+            sessionList.appendChild(item);
+        });
+    }
+
+    function loadSessions() {
+        return fetch('/ai/api/sessions', { headers: { 'X-CSRFToken': csrfToken } })
+            .then(function (res) { return res.json(); })
+            .then(renderSessionList);
+    }
+
+    async function openSession(id) {
+        activeSessionId = id;
+        const res = await fetch('/ai/api/sessions/' + id + '/messages', {
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const messages = await res.json();
+        clearMessages();
+        messages.forEach(function (m) { appendMessage(m.role, m.message); });
+        loadSessions();
+        scrollToBottom();
+        chatInput.focus();
+    }
+
+    async function createNewSession() {
+        const res = await fetch('/ai/api/sessions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken }
+        });
+        const data = await res.json();
+        activeSessionId = data.id;
+        clearMessages();
+        loadSessions();
+        chatInput.focus();
+    }
+
+    async function deleteSession(id) {
+        const res = await fetch('/ai/api/sessions/' + id, {
+            method: 'DELETE',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        if (!res.ok) return;
+        if (id === activeSessionId) {
+            createNewSession();
+        } else {
+            loadSessions();
+        }
+    }
+
+    sessionList.addEventListener('click', function (e) {
+        const del = e.target.closest('.session-delete');
+        if (del) {
+            e.stopPropagation();
+            deleteSession(parseInt(del.dataset.deleteId, 10));
+            return;
+        }
+        const item = e.target.closest('.session-item');
+        if (item) openSession(parseInt(item.dataset.sessionId, 10));
+    });
+
+    document.getElementById('newSession').addEventListener('click', createNewSession);
+    document.getElementById('chatReset').addEventListener('click', createNewSession);
+
+    // ---- Chat -------------------------------------------------------------
     async function send() {
         const message = chatInput.value.trim();
         if (!message) return;
@@ -118,12 +246,14 @@
             const res = await fetch('/ai/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-                body: JSON.stringify({ message: message })
+                body: JSON.stringify({ message: message, session_id: activeSessionId })
             });
             const data = await res.json();
             typing.style.display = 'none';
+            if (data.session_id) activeSessionId = data.session_id;
             if (data.reply) appendMessage('assistant', data.reply);
             if (data.prediction) showPrediction(data);
+            loadSessions();
         } catch (e) {
             typing.style.display = 'none';
             appendMessage('assistant', 'Sorry, something went wrong. Please try again.');
@@ -190,16 +320,6 @@
         voiceBtn.disabled = true;
         voiceBtn.title = 'Voice input not supported in this browser (try Chrome or Edge)';
     }
-
-    document.getElementById('chatReset').addEventListener('click', async function () {
-        await fetch('/ai/api/reset', { method: 'POST' });
-        chatBody.querySelectorAll('.chat-message').forEach(function (el) {
-            if (!el.classList.contains('assistant') || el.innerText.includes("What symptoms")) return;
-            el.remove();
-        });
-        predictionPanel.classList.add('d-none');
-        location.reload();
-    });
 
     scrollToBottom();
     chatInput.focus();

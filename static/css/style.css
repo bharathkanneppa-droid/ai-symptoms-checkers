@@ -38,8 +38,12 @@
 
 body {
     background: var(--body-bg);
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
     min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6, .sidebar-brand, .auth-brand h1 {
+    font-family: "Poppins", "Inter", "Segoe UI", system-ui, sans-serif;
 }
 
 /* ----------------------------------------------------------------
@@ -205,24 +209,119 @@ body {
    Auth pages
    ---------------------------------------------------------------- */
 .auth-body {
-    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
     min-height: 100vh;
     display: flex; align-items: center; justify-content: center;
     padding: 1.5rem;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 45%, #0369a1 100%);
+    overflow: hidden;
+    position: relative;
 }
-.auth-shell { width: 100%; max-width: 460px; }
-.auth-brand { text-align: center; color: #fff; margin-bottom: 1.5rem; }
-.auth-brand i { font-size: 3rem; color: #38bdf8; }
-.auth-brand h1 { font-size: 1.8rem; font-weight: 700; margin: 0.4rem 0 0; }
-.auth-brand p { opacity: 0.8; margin: 0; }
-.auth-card { border-radius: 1rem; }
-.auth-heading { font-size: 1.4rem; font-weight: 700; }
-.auth-footer { text-align: center; margin-top: 1.2rem; }
-.auth-footer .btn { color: rgba(255,255,255,0.8); }
+.auth-blob {
+    position: fixed; border-radius: 50%; filter: blur(90px);
+    opacity: 0.55; z-index: 0; pointer-events: none;
+}
+.auth-blob-1 { width: 480px; height: 480px; background: #6366f1; top: -120px; left: -120px; }
+.auth-blob-2 { width: 420px; height: 420px; background: #06b6d4; bottom: -140px; right: -80px; }
+.auth-blob-3 { width: 340px; height: 340px; background: #ec4899; top: 40%; right: 20%; opacity: 0.35; }
+.auth-shell { width: 100%; max-width: 1000px; position: relative; z-index: 1; }
+
+.auth-card {
+    border: none;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    background: var(--card-bg);
+}
+.auth-side {
+    background: linear-gradient(160deg, #4f46e5 0%, #2563eb 55%, #06b6d4 100%);
+    color: #fff;
+    position: relative;
+    padding: 2.5rem;
+    display: flex; flex-direction: column;
+}
+.auth-side-inner { display: flex; flex-direction: column; flex: 1; position: relative; z-index: 1; }
+.auth-brand { color: #fff; }
+.auth-logo {
+    width: 56px; height: 56px; border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; margin-bottom: 1rem;
+}
+.auth-brand h1 { font-size: 1.9rem; font-weight: 700; margin: 0 0 0.3rem; color: #fff; }
+.auth-brand p { opacity: 0.9; margin: 0; }
+.auth-features { list-style: none; padding: 0; margin: 2.2rem 0 0; display: grid; gap: 0.9rem; }
+.auth-features li { display: flex; align-items: center; gap: 0.8rem; font-size: 0.95rem; }
+.auth-features li i {
+    width: 34px; height: 34px; border-radius: 0.75rem; flex: none;
+    background: rgba(255, 255, 255, 0.16);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+}
+.auth-quote { margin-top: auto; padding-top: 2rem; font-style: italic; opacity: 0.9; font-size: 0.9rem; }
+.auth-quote i { margin-right: 0.35rem; }
+
+.auth-form { padding: 2.5rem 2.75rem; }
+.auth-form-head { margin-bottom: 1.25rem; }
+.auth-form-head .auth-logo {
+    width: 52px; height: 52px; margin: 0 auto 0.75rem;
+    background: linear-gradient(135deg, #4f46e5, #06b6d4);
+    color: #fff;
+}
+.auth-form-head h1 { font-size: 1.5rem; font-weight: 700; margin: 0; }
+.auth-heading-wrap { margin-bottom: 1.5rem; }
+.auth-heading { font-size: 1.6rem; font-weight: 700; }
+.auth-sub { color: var(--text-muted); margin-bottom: 0; }
+
+.auth-input .input-group-text {
+    background: var(--body-bg);
+    border-color: var(--border-color);
+    color: var(--text-muted);
+    border-radius: 0.7rem 0 0 0.7rem;
+}
+.auth-input .form-control {
+    border-radius: 0 0.7rem 0.7rem 0;
+    border-left: 0;
+}
+.auth-input .form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(79, 70, 229, 0.12);
+    border-color: #6366f1;
+}
+.btn-auth {
+    background: linear-gradient(135deg, #6366f1 0%, #2563eb 60%, #06b6d4 100%);
+    border: none; color: #fff; font-weight: 600; padding: 0.7rem 1rem;
+    border-radius: 0.7rem; transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 8px 20px -8px rgba(79, 70, 229, 0.6);
+}
+.btn-auth:hover { color: #fff; transform: translateY(-1px); box-shadow: 0 12px 24px -8px rgba(79, 70, 229, 0.7); }
+.btn-auth:active { transform: translateY(0); }
+
+.auth-divider { display: flex; align-items: center; gap: 0.75rem; margin: 1.4rem 0 1rem; color: var(--text-muted); font-size: 0.85rem; }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border-color); }
+
+.demo-accounts { margin-top: 1.4rem; padding: 0.9rem 1rem; border: 1px dashed var(--border-color); border-radius: 0.75rem; background: var(--body-bg); font-size: 0.8rem; display: grid; gap: 0.3rem; color: var(--text-muted); }
+.demo-accounts strong { color: var(--text-muted); margin-bottom: 0.2rem; }
+.demo-chip { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+
+.auth-footer { text-align: center; margin-top: 1.2rem; position: relative; z-index: 1; }
+.auth-footer .btn { color: rgba(255, 255, 255, 0.85); }
+.auth-footer .btn:hover { color: #fff; }
 
 /* ----------------------------------------------------------------
    Chat
    ---------------------------------------------------------------- */
+.sessions-card { display: flex; flex-direction: column; height: calc(100vh - 200px); min-height: 420px; }
+.sessions-list { flex: 1; overflow-y: auto; }
+.session-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+    padding: 0.65rem 0.9rem; cursor: pointer; border-bottom: 1px solid var(--border-color);
+    color: var(--text-muted); transition: background 0.15s ease;
+}
+.session-item:hover { background: rgba(128, 128, 128, 0.1); }
+.session-item.active { background: var(--sidebar-active); color: #fff; }
+.session-title { font-size: 0.9rem; min-width: 0; }
+.session-delete { opacity: 0.55; padding: 0 0.15rem; }
+.session-delete:hover { opacity: 1; color: #dc3545; }
+.session-item.active .session-delete:hover { color: #fff; }
 .chat-card { display: flex; flex-direction: column; height: calc(100vh - 200px); min-height: 420px; }
 .chat-header {
     padding: 0.9rem 1.1rem;

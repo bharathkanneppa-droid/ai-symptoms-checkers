@@ -127,6 +127,11 @@ def login():
                 user.last_login_at = utcnow()
                 db.session.commit()
                 login_user(user, remember=remember)
+                flash(
+                    f"Thanks for logging in, {user.display_name}! "
+                    f"You're signed in with {user.email}.",
+                    "success",
+                )
                 return redirect(url_for("main.dashboard"))
         else:
             flash("Invalid email or password.", "danger")

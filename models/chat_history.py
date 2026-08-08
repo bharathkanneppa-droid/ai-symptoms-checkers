@@ -13,6 +13,12 @@ class ChatHistory(db.Model):
     user_id = db.Column(
         db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
+    session_id = db.Column(
+        db.Integer,
+        db.ForeignKey("chat_sessions.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
 
     role = db.Column(db.String(20), nullable=False)  # "user" | "assistant"
     message = db.Column(db.Text, nullable=False)

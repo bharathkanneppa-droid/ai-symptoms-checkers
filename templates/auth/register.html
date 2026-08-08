@@ -1,31 +1,45 @@
 {% extends "auth_base.html" %}
 {% block title %}Register{% endblock %}
 {% block content %}
-<h2 class="auth-heading">Create account</h2>
-<p class="text-muted">Join as a patient</p>
+<div class="auth-heading-wrap">
+    <h2 class="auth-heading">Create account</h2>
+    <p class="auth-sub">Join as a patient in under a minute</p>
+</div>
 
 <form method="post" action="{{ url_for('auth.register') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="mb-3">
         <label class="form-label">Username</label>
-        <input type="text" name="username" class="form-control" placeholder="e.g. johndoe" required autofocus>
+        <div class="input-group auth-input">
+            <span class="input-group-text"><i class="bi bi-person"></i></span>
+            <input type="text" name="username" class="form-control" placeholder="e.g. johndoe" required autofocus>
+        </div>
     </div>
     <div class="mb-3">
         <label class="form-label">Email address</label>
-        <input type="email" name="email" class="form-control" placeholder="you@example.com" required>
+        <div class="input-group auth-input">
+            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+            <input type="email" name="email" class="form-control" placeholder="you@example.com" required>
+        </div>
     </div>
     <div class="mb-3">
         <label class="form-label">Password</label>
-        <input type="password" name="password" class="form-control" placeholder="Min 8 characters" required>
+        <div class="input-group auth-input">
+            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+            <input type="password" name="password" class="form-control" placeholder="Min 8 characters" required>
+        </div>
     </div>
-    <div class="mb-3">
+    <div class="mb-4">
         <label class="form-label">Confirm password</label>
-        <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required>
+        <div class="input-group auth-input">
+            <span class="input-group-text"><i class="bi bi-shield-lock"></i></span>
+            <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required>
+        </div>
     </div>
-    <button type="submit" class="btn btn-primary w-100">Register <i class="bi bi-person-plus"></i></button>
+    <button type="submit" class="btn btn-auth w-100">Register <i class="bi bi-person-plus"></i></button>
 </form>
 
-<hr>
+<div class="auth-divider"><span>or</span></div>
 <div class="text-center">
     <span class="text-muted">Already have an account?</span>
     <a href="{{ url_for('auth.login') }}">Login</a>

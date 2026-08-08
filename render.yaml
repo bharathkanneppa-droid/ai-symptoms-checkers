@@ -5,8 +5,16 @@ services:
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --bind 0.0.0.0:$PORT wsgi:app
+    healthCheckPath: /health
     envVars:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: medassist-db
+          property: connectionString
+
+databases:
+  - name: medassist-db
+    plan: free
+    ipAllowList: []
