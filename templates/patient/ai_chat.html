@@ -67,6 +67,7 @@
     const typing = document.getElementById('chatTyping');
     const predictionPanel = document.getElementById('predictionPanel');
     const predictionBody = document.getElementById('predictionBody');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
     function scrollToBottom() { chatBody.scrollTop = chatBody.scrollHeight; }
 
@@ -113,7 +114,7 @@
         try {
             const res = await fetch('/ai/api/chat', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
                 body: JSON.stringify({ message: message })
             });
             const data = await res.json();

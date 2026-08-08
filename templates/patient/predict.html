@@ -52,6 +52,7 @@
 <script>
     const checks = document.querySelectorAll('.symptom-check');
     const countLabel = document.getElementById('selectedCount');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
     function updateCount() {
         const n = document.querySelectorAll('.symptom-check:checked').length;
@@ -79,7 +80,7 @@
         try {
             const res = await fetch('/ai/api/predict', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
                 body: JSON.stringify({ symptoms: selected })
             });
             const data = await res.json();
