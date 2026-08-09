@@ -1,0 +1,25 @@
+{
+  "name": "MediAssist AI - Healthcare Companion",
+  "short_name": "MediAssist",
+  "description": "AI-powered healthcare management: symptom checking, appointments and digital prescriptions.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f0f7f6",
+  "theme_color": "#0d9488",
+  "icons": [
+    {
+      "src": "/static/images/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/images/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

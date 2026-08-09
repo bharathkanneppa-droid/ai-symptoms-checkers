@@ -1,8 +1,17 @@
 """Public routes: landing page and role-based post-login redirect."""
-from flask import Blueprint, jsonify, redirect, render_template, url_for
+from flask import Blueprint, jsonify, redirect, render_template, send_from_directory, url_for
 from flask_login import current_user
 
 main_bp = Blueprint("main", __name__)
+
+
+@main_bp.route("/sw.js")
+def service_worker():
+    """Serve the PWA service worker from the root scope (covers the whole site)."""
+    resp = send_from_directory("static", "sw.js")
+    resp.headers["Service-Worker-Allowed"] = "/"
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return resp
 
 
 @main_bp.route("/health")

@@ -1,5 +1,6 @@
 """Patient dashboard, profile, settings and history."""
 from datetime import datetime
+from collections import Counter
 from utils.time import utcnow
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
@@ -57,6 +58,15 @@ def dashboard():
         .all()
     )
 
+    status_counts = dict(
+        Counter(
+            status
+            for (status,) in db.session.query(Appointment.status)
+            .filter_by(patient_id=patient.id)
+            .all()
+        )
+    )
+
     return render_template(
         "patient/dashboard.html",
         patient=patient,
@@ -67,6 +77,7 @@ def dashboard():
         unread=unread,
         recent_appointments=recent_appointments,
         recent_prescriptions=recent_prescriptions,
+        status_counts=status_counts,
     )
 
 

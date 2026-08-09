@@ -1,11 +1,12 @@
 """Doctor dashboard: appointments, patients, prescriptions, availability."""
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
+from collections import Counter
 
 from flask import (
     Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for,
 )
 from flask_login import current_user
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 
 from database.db import db
 from models import (
@@ -67,6 +68,22 @@ def dashboard():
             doctor_id=doctor.id, status=Appointment.STATUS_COMPLETED
         ).count(),
     }
+
+    # Last-7-days appointment trend for the dashboard chart.
+    start = today - timedelta(days=6)
+    trend = dict(
+        db.session.query(Appointment.appointment_date, func.count())
+        .filter(
+            Appointment.doctor_id == doctor.id,
+            Appointment.appointment_date >= start,
+        )
+        .group_by(Appointment.appointment_date)
+        .all()
+    )
+    chart_days = [(start + timedelta(days=i)) for i in range(7)]
+    chart_counts = [trend.get(d, 0) for d in chart_days]
+    chart_labels = [d.strftime("%d %b") for d in chart_days]
+
     return render_template(
         "doctor/dashboard.html",
         doctor=doctor,
@@ -74,6 +91,8 @@ def dashboard():
         upcoming=upcoming,
         stats=stats,
         today=today,
+        chart_labels=chart_labels,
+        chart_counts=chart_counts,
     )
 
 

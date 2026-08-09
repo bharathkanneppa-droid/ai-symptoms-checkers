@@ -57,10 +57,13 @@
 </div>
 {% else %}
 <div class="card">
-    <div class="card-body text-center py-5 text-muted">
-        <i class="bi bi-calendar-x fs-1"></i>
-        <p class="mt-2">No appointments found.</p>
-        <a href="{{ url_for('appointments.book') }}" class="btn btn-primary">Book one now</a>
+    <div class="empty-state">
+        <div class="empty-state-icon"><i class="bi bi-calendar-x"></i></div>
+        <h6>No appointments found</h6>
+        <p>You haven't booked any appointments yet.</p>
+        <a href="{{ url_for('appointments.book') }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-calendar-plus"></i> Book one now
+        </a>
     </div>
 </div>
 {% endif %}

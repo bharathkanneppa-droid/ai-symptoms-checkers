@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Doctor Dashboard{% endblock %}
 {% block page_title %}Doctor Dashboard{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{% endblock %}
 {% block content %}
 
 <div class="card mb-4">
@@ -88,8 +91,19 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted p-4 mb-0">No appointments today.</p>
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-calendar-day"></i></div>
+                    <h6>No appointments today</h6>
+                    <p>Enjoy the calm. New requests will appear here.</p>
+                </div>
                 {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header"><strong><i class="bi bi-graph-up"></i> Appointments — last 7 days</strong></div>
+            <div class="card-body">
+                <canvas id="trendChart" height="90"></canvas>
             </div>
         </div>
     </div>
@@ -108,10 +122,43 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted p-4 mb-0">No upcoming appointments.</p>
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-calendar2-week"></i></div>
+                    <h6>No upcoming appointments</h6>
+                    <p>When patients book with you, they'll show up here.</p>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const chartDays = {{ chart_labels | tojson }};
+    const chartCounts = {{ chart_counts | tojson }};
+    if (document.getElementById('trendChart')) {
+        new Chart(document.getElementById('trendChart'), {
+            type: 'line',
+            data: {
+                labels: chartDays,
+                datasets: [{
+                    label: 'Appointments',
+                    data: chartCounts,
+                    borderColor: '#0d9488',
+                    backgroundColor: 'rgba(13,148,136,0.15)',
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: '#0d9488',
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+            }
+        });
+    }
+</script>
 {% endblock %}

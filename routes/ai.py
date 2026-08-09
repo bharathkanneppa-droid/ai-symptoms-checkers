@@ -6,6 +6,7 @@ chat UI. Per-session bot state and Gemini transcripts are scoped by session.
 """
 import json
 import logging
+import re
 
 from flask import (
     Blueprint, jsonify, render_template, request, session,
@@ -27,6 +28,20 @@ ai_bp = Blueprint("ai", __name__, url_prefix="/ai")
 
 STATES_KEY = "ai_states"  # per-session bot state, keyed by session id
 SESSION_KEY = "ai_session_id"  # active chat session in the Flask session
+
+_BOOKING_PATTERN = re.compile(
+    r"\b(book|booking|schedule|appoint(ment|ed)?|slot|see a doctor|"
+    r"meet a doctor|fix a visit|make an appointment)\b",
+    re.IGNORECASE,
+)
+
+
+def _booking_intent(message):
+    """Return True when the user clearly wants to book an appointment."""
+    if not message:
+        return False
+    text = message.lower()
+    return bool(_BOOKING_PATTERN.search(text))
 
 
 # --------------------------------------------------------------------------- #
@@ -173,6 +188,11 @@ def api_chat():
     states = session.get(STATES_KEY, {})
     state = dict(states.get(str(chat_session.id), {}))
     result = _run_engine(message, transcript, state)
+
+    # Offer a quick booking shortcut when the patient asks for an appointment.
+    result["booking_hint"] = _booking_intent(message) or _booking_intent(
+        result.get("reply", "")
+    )
 
     # Persist the conversation transcript.
     db.session.add(

@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Patient Dashboard{% endblock %}
 {% block page_title %}Patient Dashboard{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{% endblock %}
 {% block content %}
 
 <div class="welcome-card card mb-4">
@@ -89,14 +92,34 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted p-4 mb-0">No upcoming appointments.
-                    <a href="{{ url_for('appointments.book') }}">Book one now</a>.
-                </p>
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-calendar-x"></i></div>
+                    <h6>No upcoming appointments</h6>
+                    <p>You don't have any upcoming visits. Book one in seconds.</p>
+                    <a href="{{ url_for('appointments.book') }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-calendar-plus"></i> Book an appointment
+                    </a>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
     <div class="col-lg-5">
+        <div class="card mb-4">
+            <div class="card-header"><strong><i class="bi bi-pie-chart"></i> My Appointments</strong></div>
+            <div class="card-body">
+                {% if status_counts %}
+                <canvas id="statusChart" height="180"></canvas>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-calendar-plus"></i></div>
+                    <h6>No appointments yet</h6>
+                    <p>Your appointment activity will appear here.</p>
+                    <a href="{{ url_for('appointments.book') }}" class="btn btn-sm btn-primary">Book now</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
         <div class="card mb-4">
             <div class="card-header"><strong><i class="bi bi-file-earmark-medical"></i> Recent Prescriptions</strong></div>
             <div class="card-body p-0">
@@ -111,7 +134,11 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-muted p-4 mb-0">No prescriptions yet.</p>
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-file-earmark-medical"></i></div>
+                    <h6>No prescriptions yet</h6>
+                    <p>Prescriptions from your doctors will show up here.</p>
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -127,4 +154,32 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const statusCounts = {{ status_counts | tojson }};
+    const meta = {
+        'pending': ['Pending', '#f59e0b'],
+        'accepted': ['Accepted', '#0d9488'],
+        'completed': ['Completed', '#22c55e'],
+        'cancelled': ['Cancelled', '#ef4444'],
+        'rejected': ['Rejected', '#94a3b8']
+    };
+    const labels = [], values = [], colors = [];
+    Object.keys(statusCounts).forEach(function (k) {
+        if (meta[k] && statusCounts[k] > 0) {
+            labels.push(meta[k][0]);
+            values.push(statusCounts[k]);
+            colors.push(meta[k][1]);
+        }
+    });
+    if (labels.length && document.getElementById('statusChart')) {
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: { labels: labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 2, borderColor: 'rgba(255,255,255,0.9)' }] },
+            options: { cutout: '62%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } } }
+        });
+    }
+</script>
 {% endblock %}

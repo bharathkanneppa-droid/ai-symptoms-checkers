@@ -23,7 +23,11 @@
                     </span>
                 </div>
                 {% else %}
-                <div class="text-center text-muted py-4" id="noSessions">No conversations yet</div>
+                <div class="empty-state py-4" id="noSessions">
+                    <div class="empty-state-icon" style="width:52px;height:52px;font-size:1.3rem"><i class="bi bi-chat-dots"></i></div>
+                    <h6>No conversations yet</h6>
+                    <p>Start chatting with the AI Doctor.</p>
+                </div>
                 {% endfor %}
             </div>
         </div>
@@ -41,6 +45,9 @@
                     </div>
                 </div>
                 <div>
+                    <button class="btn btn-sm btn-outline-secondary" id="voiceReplyBtn" title="Read AI replies aloud">
+                        <i class="bi bi-volume-up"></i>
+                    </button>
                     <button class="btn btn-sm btn-outline-secondary" id="chatReset">
                         <i class="bi bi-arrow-counterclockwise"></i> New chat
                     </button>
@@ -115,6 +122,39 @@
         scrollToBottom();
     }
 
+    function appendBookingButton() {
+        const el = document.createElement('div');
+        el.className = 'chat-message assistant';
+        el.innerHTML = '<div class="chat-bubble">Ready to see a doctor? Book an appointment with a specialist now:' +
+            ' <a href="{{ url_for("appointments.book") }}" class="btn btn-sm btn-primary mt-2">' +
+            '<i class="bi bi-calendar-plus"></i> Book an appointment</a></div>';
+        chatBody.insertBefore(el, typing);
+        scrollToBottom();
+    }
+
+    // ---- Voice replies (SpeechSynthesis) -----------------------------------
+    const voiceReplyBtn = document.getElementById('voiceReplyBtn');
+    let voiceOn = false;
+
+    function speak(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const clean = text.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+        const utterance = new SpeechSynthesisUtterance(clean);
+        utterance.lang = 'en-US';
+        utterance.rate = 1;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function setVoiceOn(on) {
+        voiceOn = on;
+        voiceReplyBtn.classList.toggle('btn-primary', on);
+        voiceReplyBtn.classList.toggle('btn-outline-secondary', !on);
+        if (!on && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+    }
+
+    voiceReplyBtn.addEventListener('click', function () { setVoiceOn(!voiceOn); });
+
     function clearMessages() {
         chatBody.querySelectorAll('.chat-message').forEach(function (el) {
             if (el !== welcomeMessage) el.remove();
@@ -149,7 +189,8 @@
     function renderSessionList(list) {
         sessionList.innerHTML = '';
         if (!list.length) {
-            sessionList.innerHTML = '<div class="text-center text-muted py-4">No conversations yet</div>';
+            sessionList.innerHTML = '<div class="empty-state py-4"><div class="empty-state-icon" style="width:52px;height:52px;font-size:1.3rem"><i class="bi bi-chat-dots"></i></div>' +
+                '<h6>No conversations yet</h6><p>Start chatting with the AI Doctor.</p></div>';
             return;
         }
         list.forEach(function (s) {
@@ -251,7 +292,11 @@
             const data = await res.json();
             typing.style.display = 'none';
             if (data.session_id) activeSessionId = data.session_id;
-            if (data.reply) appendMessage('assistant', data.reply);
+            if (data.reply) {
+                appendMessage('assistant', data.reply);
+                if (voiceOn) speak(data.reply);
+            }
+            if (data.booking_hint) appendBookingButton();
             if (data.prediction) showPrediction(data);
             loadSessions();
         } catch (e) {

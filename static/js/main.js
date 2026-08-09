@@ -56,4 +56,11 @@
             if (close) close.click();
         }, 6000);
     });
+
+    // ---------------------------------------------------------------
+    // Flash messages as Bootstrap toasts
+    // ---------------------------------------------------------------
+    document.querySelectorAll("#toastContainer .toast").forEach(function (toast) {
+        if (window.bootstrap) new bootstrap.Toast(toast, { delay: 5000 }).show();
+    });
 })();
