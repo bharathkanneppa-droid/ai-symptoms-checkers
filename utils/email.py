@@ -30,21 +30,25 @@ def send_email(to, subject, body_html, body_text=None):
         return
 
     def _send():
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = app.config["MAIL_DEFAULT_SENDER"]
-        msg["To"] = to
-        msg.attach(MIMEText(body_text, "plain"))
-        msg.attach(MIMEText(body_html, "html"))
+        try:
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"] = app.config["MAIL_DEFAULT_SENDER"]
+            msg["To"] = to
+            msg.attach(MIMEText(body_text, "plain"))
+            msg.attach(MIMEText(body_html, "html"))
 
-        with smtplib.SMTP(
-            app.config["MAIL_SERVER"], app.config["MAIL_PORT"]
-        ) as server:
-            if app.config["MAIL_USE_TLS"]:
-                server.starttls()
-            if app.config.get("MAIL_USERNAME"):
-                server.login(app.config["MAIL_USERNAME"], app.config["MAIL_PASSWORD"])
-            server.sendmail(msg["From"], [to], msg.as_string())
+            with smtplib.SMTP(
+                app.config["MAIL_SERVER"], app.config["MAIL_PORT"], timeout=30
+            ) as server:
+                if app.config["MAIL_USE_TLS"]:
+                    server.starttls()
+                if app.config.get("MAIL_USERNAME"):
+                    server.login(app.config["MAIL_USERNAME"], app.config["MAIL_PASSWORD"])
+                server.sendmail(msg["From"], [to], msg.as_string())
+            logger.info("Email sent to %s (subject: %s)", to, subject)
+        except Exception:
+            logger.exception("Failed to send email to %s (subject: %s)", to, subject)
 
     threading.Thread(target=_send, daemon=True).start()
 
