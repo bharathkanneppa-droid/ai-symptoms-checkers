@@ -71,7 +71,7 @@ class Config:
     # When GEMINI_API_KEY is set, the AI Doctor chat uses the live Gemini model.
     # Without it, the app falls back to the built-in rule-based symptom bot.
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-    GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
+    GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 
     # --- Boot behaviour ---------------------------------------------------------------
     # Set to "false" when the database is loaded by other means (e.g. a one-time
